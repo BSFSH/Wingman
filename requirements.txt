@@ -1,0 +1,3 @@
+pytest
+scapy
+# If on Windows, ensure Npcap is installed (https://npcap.com/)

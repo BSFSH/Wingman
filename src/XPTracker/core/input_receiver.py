@@ -18,7 +18,8 @@ class InputReceiver:
 
     @staticmethod
     def clean_message(input_line):
-        ansi_code_pattern = re.compile(r'\[\d+(?:;\d+)*m')
+        # UPDATED: Now includes \x1b to catch the Escape character too
+        ansi_code_pattern = re.compile(r'\x1b\[\d+(?:;\d+)*m')
         return ansi_code_pattern.sub('', input_line)
 
     def receive(self, input_line):

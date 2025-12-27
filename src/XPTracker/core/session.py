@@ -9,39 +9,46 @@ class GameSession:
         self.total_xp = 0
         self.start_time = time.time()
 
+    def get_xp_per_hour(self):
+        if self.total_xp == 0: return 0
+        elapsed_seconds = time.time() - self.start_time
+        if elapsed_seconds < 1: return 0
+        hours = elapsed_seconds / 3600
+        return int(self.total_xp / hours)
+
+    def reset(self):
+        self.total_xp = 0
+        self.start_time = time.time()
+
+    def get_duration_str(self):
+        elapsed = int(time.time() - self.start_time)
+        hours = elapsed // 3600
+        minutes = (elapsed % 3600) // 60
+        seconds = elapsed % 60
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+
     def process_queue(self):
         """
-        Pops ALL items from the receiver's stack.
-        - If it's XP, add to total.
-        - If it's not, discard it.
+        Pops items, calculates XP, and returns a list of text logs for the GUI.
         """
-        while True:
-            # 1. Get the next line from the stack (FIFO)
-            line = self.receiver.remove_from_top()
+        logs = []
 
-            # 2. If stack is empty, we are done for now
+        # Process everything currently in the stack
+        while True:
+            line = self.receiver.remove_from_top()
             if line is None:
                 break
 
-            # 3. Check if it is an XP message
-            # parse_xp_message returns 0 if it's "garbage" or chat
+            # DEBUG: Uncomment this to see what the session actually receives
+            # print(f"DEBUG Popped: {line.strip()}")
+
             xp_gain = parse_xp_message(line)
 
             if xp_gain > 0:
+                print(f"DEBUG: XP FOUND: {xp_gain}")  # Keep this visible
                 self.total_xp += xp_gain
+                timestamp = time.strftime("%H:%M:%S", time.localtime())
+                log_entry = f"[{timestamp}] +{xp_gain:,} XP"
+                logs.append(log_entry)
 
-    def get_xp_per_hour(self):
-        """
-        Calculates XP per hour based on total_xp and elapsed time.
-        """
-        if self.total_xp == 0:
-            return 0
-
-        elapsed_seconds = time.time() - self.start_time
-
-        # Avoid division by zero
-        if elapsed_seconds < 1:
-            return 0
-
-        hours = elapsed_seconds / 3600
-        return int(self.total_xp / hours)
+        return logs
