@@ -1,0 +1,51 @@
+# Olmran XP Tracker
+
+A real-time Experience Point tracker for MUDs (Multi-User Dungeons) that intercepts network traffic to calculate XP/hr, track kills, and predict level-up times.
+
+## Prerequisites (Critical)
+
+Because this tool sniffs network packets to read game data, you need two things installed:
+
+1.  **Python 3.10+**: [Download Here](https://www.python.org/downloads/)
+2.  **Npcap (Windows)** or **libpcap (Linux)**:
+    * **Windows Users:** You MUST install [Npcap](https://npcap.com/#download).
+    * *During installation, check the box: "Install Npcap in WinPcap API-compatible Mode".*
+    
+## Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/yourusername/xp-tracker.git](https://github.com/yourusername/xp-tracker.git)
+    cd xp-tracker
+    ```
+
+2.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Configuration
+
+By default, the tracker listens for traffic from the game server `18.119.153.121` on port `4000`.
+
+If you need to track a different server:
+1.  Open `src/XPTracker/core/network_listener.py`.
+2.  Edit the `self.target_ip` and `self.target_port` variables.
+
+## How to Run
+
+**Note:** You must run this application with **Administrator/Root** privileges so it can access your network card.
+
+**Windows (PowerShell/CMD):**
+1.  Right-click your terminal and select **"Run as Administrator"**.
+2.  Navigate to the project folder.
+3.  Run the application:
+    ```bash
+    python src/XPTracker/main.py
+    ```
+
+**Linux/Mac:**
+```bash
+sudo python3 src/XPTracker/main.py
+```
+**Note:** Linux/Mac compatibility is completely untested.
