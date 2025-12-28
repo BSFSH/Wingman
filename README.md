@@ -29,7 +29,7 @@ Because this tool sniffs network packets to read game data, you need two things 
 By default, the tracker listens for traffic from the game server `18.119.153.121` on port `4000`.
 
 If you need to track a different server:
-1.  Open `src/XPTracker/core/network_listener.py`.
+1.  Open `src/Wingman/core/network_listener.py`.
 2.  Edit the `self.target_ip` and `self.target_port` variables.
 
 ## How to Run
@@ -41,11 +41,11 @@ If you need to track a different server:
 2.  Navigate to the project folder.
 3.  Run the application:
     ```bash
-    python src/XPTracker/main.py
+    python src/Wingman/main.py
     ```
 
 **Linux/Mac:**
 ```bash
-sudo python3 src/XPTracker/main.py
+sudo python3 src/Wingman/main.py
 ```
 **Note:** Linux/Mac compatibility is completely untested.
