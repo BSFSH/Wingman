@@ -1,3 +1,7 @@
+## [Unreleased 0.2.2]
+### Added
+- vscode path fixes
+
 ## [Unreleased 0.2.1]
 ### Added
 - Divided UI updates into "fast" (xp total) and "rate limited" (xp/hr). Rate limited updates are limited to 1/s.
