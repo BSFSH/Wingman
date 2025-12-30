@@ -1,7 +1,15 @@
 ## [Unreleased 0.2.4]
+### Added
+- Settings menu widget, dark mode, always on top toggles
+- Pause button
+
+### Updated
+- Moved session reset to menu widget
+
+## [Unreleased 0.2.4]
 ### Updated
 - Fixed group regex to handle pets
-- And them promptly changed pets (class == mob) to be excluded from the display
+- And then promptly changed pets (class == mob) to be excluded from the display
 
 ## [Unreleased 0.2.3]
 ### Added
