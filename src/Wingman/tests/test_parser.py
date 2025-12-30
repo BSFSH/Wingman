@@ -1,4 +1,5 @@
 import pytest
+from itertools import combinations
 from Wingman.core.parser import parse_xp_message, parse_group_status
 
 
@@ -59,6 +60,24 @@ class TestGroupParser:
         assert len(results) == 1
         assert results[0]['status'] == "B"
         assert results[0]['name'] == "Quacamole"
+    
+    @pytest.mark.parametrize("input,expected", argvalues= [
+                                        ("[Sin         74] B       Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", "B"),
+                                        ("[Sin         74] P       Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", "P"),
+                                        ("[Sin         74] D       Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", "D"),
+                                        ("[Sin         74] S       Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", "S"),
+                                        ], ids=[
+                                            "Bleed",
+                                            "Poison",
+                                            "Disease",
+                                            "Stun"
+                                        ]
+    )
+    def test_individual_status_flags(self, input, expected):
+        results = parse_group_status(input)
+        actual = results[0]['status']
+
+        assert actual == expected
 
     def test_ignores_headers_and_noise(self):
         """
@@ -79,3 +98,34 @@ class TestGroupParser:
         assert len(results) == 1
         assert results[0]['status'] == "B P"
         assert results[0]['name'] == "Quacamole"
+
+    @pytest.mark.parametrize("input,expected", argvalues=[
+                                        ("[Sin         74] B P     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B P'),
+                                        ("[Sin         74] B D     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B D'),
+                                        ("[Sin         74] B S     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B S'),
+                                        ("[Sin         74] P D     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'P D'),
+                                        ("[Sin         74] P S     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'P S'),
+                                        ("[Sin         74] D S     Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'D S'),
+                                        ("[Sin         74] B P D   Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B P D'),
+                                        ("[Sin         74] B P S   Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B P S'),
+                                        ("[Sin         74] B D S   Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B D S'),
+                                        ("[Sin         74] P D S   Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'P D S'),
+                                        ("[Sin         74] B P D S Beautiful        500/500 (100%)  500/500 (100%)  418/731 ( 57%)", 'B P D S')
+                                        ], ids=[
+                                            "Bleed + Poison",
+                                            "Bleed + Disease",
+                                            "Bleed + Stun",
+                                            "Poison + Disease",
+                                            "Poison + Stun",
+                                            "Disease + Stun",
+                                            "Bleed + Poison + Disease",
+                                            "Bleed + Poison + Stun",
+                                            "Bleed + Disease + Stun",
+                                            "Poison + Disease + Stun",
+                                            "Bleed + Poison + Disease + Stun"
+                                        ]
+                                    )
+    def test_multiple_status_flags(self, input, expected):        
+        actual = parse_group_status(input)[0]['status']
+
+        assert actual == expected
