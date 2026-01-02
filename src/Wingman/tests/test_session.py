@@ -70,3 +70,33 @@ def test_group_data_flow(session):
     assert len(data) == 2
     assert data[0]['name'] == 'Earthquack'
     assert data[1]['name'] == 'Legolas'
+
+def test_ungroupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
+    receiver = InputReceiver()
+    receiver.receive("FooBar follows you")
+
+    session = GameSession(receiver)
+    session.process_queue()
+
+    foo = session.get_latest_group_data()
+
+    assert len(foo) == 1
+
+def test_groupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
+    receiver = InputReceiver()
+    groupCommandText = """Beautiful's group:
+
+[ Class        Lvl] Status     Name                 Hits               Fat                Power            
+[Sin            69]           Beautiful            500/ 500 (100%)    497/ 500 ( 99%)    592/ 707 ( 83%)   
+[Skelton        50]           Skeletor             396/ 396 (100%)    396/ 396 (100%)    554/ 554 (100%) """
+
+    receiver.receive(groupCommandText)
+    session = GameSession(receiver)
+    session.process_queue()    
+
+    receiver.receive("FooBar follows you")
+    session.process_queue()
+
+    foo = session.get_latest_group_data()
+
+    assert len(foo) == 3

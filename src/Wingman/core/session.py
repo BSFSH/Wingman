@@ -62,7 +62,7 @@ class GameSession:
     def reset(self):
         self.total_xp = 0
         self.start_time = time.time()
-        self.latest_group_data = []
+        self.latest_group_data.clear()
 
         # Reset pause data so we don't start with negative time or stuck pauses
         self.pause_start_time = None
@@ -103,7 +103,7 @@ class GameSession:
 
             # NEW: Remove the '^' to allow timestamps before the name
             if "group:" in line and re.search(r"\S+'s group:", line):
-                self.latest_group_data = []
+                self.latest_group_data.clear()
 
             # Check for member rows in this line
             found_members = parse_group_status(line)
