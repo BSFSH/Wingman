@@ -4,7 +4,6 @@ import ctypes
 from tkinter import ttk
 from Wingman.core.session import GameSession
 
-
 class XPTrackerApp:
     def __init__(self, session: GameSession):
         self.session = session
@@ -90,7 +89,7 @@ class XPTrackerApp:
 
         self.tree.heading("cls", text="Class");
         self.tree.heading("lvl", text="Lvl")
-        self.tree.heading("status", text="Sts");
+        self.tree.heading("status", text="Status");
         self.tree.heading("name", text="Name")
         self.tree.heading("hp", text="HP");
         self.tree.heading("fat", text="Fatigue")
@@ -170,6 +169,7 @@ class XPTrackerApp:
         self.session.process_queue()
         group_data = self.session.get_latest_group_data()
         if group_data: self._refresh_tree(group_data)
+
         current_xp = self.session.total_xp
         self.var_total_xp.set(f"Total XP: {current_xp:,}")
         now = time.time()
@@ -179,12 +179,25 @@ class XPTrackerApp:
             self.var_duration.set(self.session.get_duration_str())
             self.last_stat_update = now
 
+
     def _refresh_tree(self, members):
+        def isCurrentPartyMember(m):
+            return m['cls'] is not None
+
+        def isNewlyJoinedPartyMember(m):
+            return m['cls'] is None and m['NewGroupMember'] is not None
+
         for item in self.tree.get_children():
             self.tree.delete(item)
         for m in members:
-            values = (m['cls'], m['lvl'], m['status'], m['name'], m['hp'], m['fat'], m['pwr'])
-            self.tree.insert("", tk.END, values=values)
+            if isCurrentPartyMember(m):
+                values = (m['cls'], m['lvl'], m['status'], m['name'], m['hp'], m['fat'], m['pwr'])
+                item_id = self.tree.insert('', tk.END, values=values)
+                self.tree.see(item_id)
+            elif isNewlyJoinedPartyMember(m):
+                values = ('__', "__", "__", m['NewGroupMember'], '__', '__', '__')
+                item_id = self.tree.insert('', tk.END, values=values)
+                self.tree.see(item_id)
 
     def run(self):
         self.root.mainloop()
