@@ -16,7 +16,7 @@ def parse_xp_message(text_block: str) -> int:
     return total_xp
 
 
-def parse_group_status(text_block: str) -> List[Dict[str, Any]]:
+def parse_group_status(text_block: str, includePets: bool = False) -> List[Dict[str, Any]]:
     """
     Parses a text block for group member status.
     Returns a list of dictionaries for valid rows found.
@@ -24,37 +24,57 @@ def parse_group_status(text_block: str) -> List[Dict[str, Any]]:
     members = []
 
     # Regex Breakdown:
-    # 1. Capture Class and Level inside brackets: [Orc 40]
-    # 2. Capture optional Status (if present)
-    # 3. Capture Name
-    # 4. Capture HP, Fat, Power (e.g. "227/ 394") ignoring the percentages
+    classAndLevel = r"\[\s*(?P<cls>[A-Za-z]+)\s+(?P<lvl>\d+)\s*\]"
+    spaceAfterBracket = r"\s+"
+    statusIndicators = r"(?P<status>(?:[BPDS]\s)*)"
+    characterName = r"(?P<name>.+?)"
+    health = r"\s+(?P<hp>\d+/\s*\d+)"
+    skipPercentIndicators = r".*?"
+    fatigue = r"\s+(?P<fat>\d+/\s*\d+)"
+    power = r"\s+(?P<pwr>\d+/\s*\d+)"
 
-    pattern = re.compile(
-        r"\[\s*(?P<cls>[A-Za-z]+)\s+(?P<lvl>\d+)\s*\]"  # [Class Lvl]
-        r"\s+"  # Space after bracket
-        r"(?P<status>(?:[BPDS]\s)*)"  # Status: Only B, P, D, S followed by space
-        r"(?P<name>.+?)"  # Name: Capture anything (lazy match)
-        r"\s+"  # Space before HP (anchors the name end)
-        r"(?P<hp>\d+/\s*\d+)"  # HP
-        r".*?"  # Skip percent
-        r"\s+(?P<fat>\d+/\s*\d+)"  # Fat
-        r".*?"  # Skip percent
-        r"\s+(?P<pwr>\d+/\s*\d+)",  # Power
+    currentPartyMember = classAndLevel + spaceAfterBracket + statusIndicators + characterName \
+                        + health + skipPercentIndicators \
+                        + fatigue + skipPercentIndicators \
+                        + power
+
+    newFollowersName = r"(?P<NewGroupMember>.+)"
+    followsYou = r"\s{1}follows you"
+    newFollower = f"{newFollowersName}{followsYou}"
+
+
+    groupParserString = f"({currentPartyMember}|{newFollower})"
+
+    pattern = re.compile(groupParserString,
         re.DOTALL
     )
+    
+    def isCurrentPartyMember(line: str) -> bool:
+        return ']' in line and '/' in line
+
+    def isNewFollower(line: str) -> bool:
+        return 'follows you' in line
 
     for line in text_block.splitlines():
-        if "]" in line and "/" in line:
+        if isCurrentPartyMember(line):
             match = pattern.search(line)
             if match:
                 data = match.groupdict()
 
                 # NEW: Exclude pets/mobs immediately
-                if data['cls'].lower() == 'mob':
+                if not includePets and data['cls'].lower() == 'mob':
                     continue
 
                 data['status'] = data['status'].strip()
                 data['name'] = data['name'].strip()
+                members.append(data)
+
+        elif isNewFollower(line):
+            match = pattern.search(line)
+            if match:
+                data = match.groupdict()
+
+                data['NewGroupMember'] = match.group('NewGroupMember').strip()
                 members.append(data)
 
     return members

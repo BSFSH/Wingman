@@ -116,3 +116,48 @@ class TestGroupParser:
         actual = parse_group_status(input)[0]['status']
 
         assert actual == expected
+
+
+    @pytest.mark.parametrize("input,expected", argvalues=[
+                                                ("NewFollower follows you", "NewFollower"),
+                                                ("A vapor-shrouded mistwolf follows you", "A vapor-shrouded mistwolf")
+                                                ],
+                                                ids=[
+                                                "Non-Disguised_Non-Shapeshifted_Follower", 
+                                                "Disguised-Follower"
+                                                ]
+    )
+    def test_new_follower_results_in_new_group_member(self, input, expected):
+        results = parse_group_status(input)
+
+        assert len(results) == 1
+        assert results[0]['NewGroupMember'] == expected
+
+    
+    def test_existingGroupFollowedByNewMember_IndicatesNewMemberWithoutUpdatesToExpected(self):
+        raw_input = """Beautiful's group:
+[ Class        Lvl] Status     Name                 Hits               Fat                Power            
+[Sin            69]           Foo                  100/ 500 (100%)    474/ 500 ( 94%)    638/ 707 ( 90%)  
+[Skeleton       15]           Bar                  200/ 500 (100%)    300/ 500 ( 94%)    400/ 707 ( 90%)  
+
+A vapor-shrouded mistwolf follows you"""
+
+        matches = parse_group_status(raw_input) #  pattern.findall(raw_input)
+
+        assert len(matches) == 3
+
+    @pytest.mark.parametrize("includePets,expectedCount", [
+        (False, 1),
+        (True, 2)
+    ])
+    def test_include_pets_in_group_parse(self, includePets: bool, expectedCount: int):
+        raw_input = """Beautiful's group:
+
+[ Class      Lv] Status   Name              Hits            Fat             Power         
+[Sin         74]         Beautiful        500/500 (100%)  500/500 (100%)  556/731 ( 76%)  
+
+[mob         72]         angel of death   445/445 (100%)  445/445 (100%)  547/547 (100%)  """
+
+        groupMembers = parse_group_status(raw_input, includePets=includePets)
+
+        assert len(groupMembers) == expectedCount
