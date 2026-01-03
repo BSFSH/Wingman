@@ -71,18 +71,16 @@ def test_group_data_flow(session):
     assert data[0]['name'] == 'Earthquack'
     assert data[1]['name'] == 'Legolas'
 
-def test_ungroupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
+def test_UngroupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
     receiver = InputReceiver()
     receiver.receive("FooBar follows you")
 
     session = GameSession(receiver)
     session.process_queue()
 
-    foo = session.get_latest_group_data()
+    assert len(session.get_latest_group_data()) == 1
 
-    assert len(foo) == 1
-
-def test_groupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
+def test_LeaderGainsNewFollower_NewFollowerAddedToLatestGroupData():
     receiver = InputReceiver()
     groupCommandText = """Beautiful's group:
 
@@ -97,6 +95,46 @@ def test_groupedCharacterGainsNewFollower_NewFollowerAddedToLatestGroupData():
     receiver.receive("FooBar follows you")
     session.process_queue()
 
-    foo = session.get_latest_group_data()
+    assert len(session.get_latest_group_data()) == 3
 
-    assert len(foo) == 3
+def test_LeavingGroup_ClearsLatestGroupData():
+    receiver = InputReceiver()
+    groupCommandText = """Foo's group:
+
+[ Class      Lv] Status   Name              Hits            Fat             Power         
+[Necromance   9]         Foo              100/100 (100%)  100/100 (100%)  119/119 (100%)  
+
+[Sin         74]         Beautiful        500/500 (100%)  383/500 ( 76%)  503/731 ( 68%)  """
+
+    receiver.receive(groupCommandText)
+    session = GameSession(receiver)
+    session.process_queue()
+
+    groupCountWhileMemberOfGroup = len(session.get_latest_group_data())
+
+    receiver.receive("You disband from the group.")
+    session.process_queue()
+
+    assert groupCountWhileMemberOfGroup == 2
+    assert len(session.get_latest_group_data()) == 0
+
+def test_nonGroupLeaderLeavesGroup_IsRemovedFromLatestGroupData():
+    receiver = InputReceiver()
+    groupText = """Foo's group:
+
+[ Class      Lv] Status   Name              Hits            Fat             Power         
+[Necromance   9]         Foo              100/100 (100%)  100/100 (100%)  119/119 (100%)  
+
+[Sin         74]         Bar              500/500 (100%)  383/500 ( 76%)  503/731 ( 68%)  
+
+[Hydro       60]         Baz              100/200 (100%)  200/400 ( 50%)  300/600 ( 50%)  """
+    receiver.receive(groupText)
+    session = GameSession(receiver)
+    session.process_queue()
+    initialGroupSize = len(session.get_latest_group_data())
+
+    receiver.receive("Baz disbands from the group.")
+    session.process_queue()
+
+    assert initialGroupSize == 3
+    assert len(session.get_latest_group_data()) == 2

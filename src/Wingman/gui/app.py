@@ -168,8 +168,8 @@ class XPTrackerApp:
         if self.paused: return
         self.session.process_queue()
         group_data = self.session.get_latest_group_data()
-        if group_data: self._refresh_tree(group_data)
-
+        if group_data or self.session.shouldRefreshGroupDisplay:
+            self._refresh_tree(group_data)
         current_xp = self.session.total_xp
         self.var_total_xp.set(f"Total XP: {current_xp:,}")
         now = time.time()
@@ -192,12 +192,14 @@ class XPTrackerApp:
         for m in members:
             if isCurrentPartyMember(m):
                 values = (m['cls'], m['lvl'], m['status'], m['name'], m['hp'], m['fat'], m['pwr'])
-                item_id = self.tree.insert('', tk.END, values=values)
+                item_id = self.tree.insert('', tk.END, iid=m['name'], values=values)
                 self.tree.see(item_id)
             elif isNewlyJoinedPartyMember(m):
                 values = ('__', "__", "__", m['NewGroupMember'], '__', '__', '__')
-                item_id = self.tree.insert('', tk.END, values=values)
+                item_id = self.tree.insert('', tk.END, iid=m['NewGroupMember'], values=values)
                 self.tree.see(item_id)
+        
+        self.session.shouldRefreshGroupDisplay = False
 
     def run(self):
         self.root.mainloop()

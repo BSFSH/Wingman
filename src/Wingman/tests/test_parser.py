@@ -1,6 +1,5 @@
 import pytest
-from Wingman.core.parser import parse_xp_message, parse_group_status
-
+from Wingman.core.parser import parse_xp_message, parse_group_status, parse_leaveGroup
 
 class TestXPParser:
     def test_parse_compound_xp(self):
@@ -161,3 +160,58 @@ A vapor-shrouded mistwolf follows you"""
         groupMembers = parse_group_status(raw_input, includePets=includePets)
 
         assert len(groupMembers) == expectedCount
+
+
+class TestLeavingGroupParser:
+    @pytest.mark.parametrize('input,expected', [
+                                                ('foo disbands from your group', 'foo'),
+                                                ('Foo disbands from your group', 'Foo'),
+                                                ('FOO DISBANDS FROM YOUR GROUP', 'FOO')
+                                                ],
+                                                ids=[
+                                                    'Lowercase input',
+                                                    'Mixedcase input',
+                                                    'Uppercase input',
+                                                ])
+    def test_GroupedMemberDisbands_IsCorrectlyParsed(self, input, expected):
+        leaver = parse_leaveGroup(input)
+        nameOfLeaver = leaver[0]
+
+        assert len(leaver) == 1
+        assert nameOfLeaver == expected
+    
+    @pytest.mark.parametrize('input,expected', [
+                                                ('foo disbands from the group', 'foo'),
+                                                ('foo disbands from your group', 'foo'),
+                                                ],
+                                                ids=[
+                                                    'Party you are PART-OF',
+                                                    'Party you are LEADING'
+                                                    ])
+    def test_WhetherMemberOfAPartyOrLeader_IsCorrectlyParsed(self, input, expected):
+        leaver = parse_leaveGroup(input)
+        nameOfLeaver = leaver[0]
+
+        assert len(leaver) == 1
+        assert nameOfLeaver == expected
+
+
+    @pytest.mark.parametrize('input,expected', [
+                                                ('An angel of death disbands from your group', 'An angel of death'),
+                                                ('A hand of justice disbands from your group.', 'A hand of justice'),
+                                                ],
+    )
+    def test_GroupedPetMember_DiesWhichIsConsideredLeaving_IsCorrectlyParsed(self, input, expected):
+        leavers = parse_leaveGroup(input)
+        nameOfLeaver = leavers[0]
+        
+        assert len(leavers) == 1
+        assert nameOfLeaver == expected
+    
+
+    def test_InputTextPrefixedWithCharstateBeforeInput_IgnoresCharstateAndCorrectlyParsesLeaver(self):
+        leavers = parse_leaveGroup(r'{"combat":"NORMAL","currentWeight":126,"maxWeight":438,"pos":"Standing"}��%U\x00\x00\x00\x00An angel of death disbands from your group.')
+        nameOfLeaver = leavers[0]
+
+        assert len(leavers) == 1
+        assert nameOfLeaver == 'An angel of death'

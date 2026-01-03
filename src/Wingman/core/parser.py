@@ -59,7 +59,7 @@ def parse_group_status(text_block: str, includePets: bool = False) -> List[Dict[
         if isCurrentPartyMember(line):
             match = pattern.search(line)
             if match:
-                data = match.groupdict()
+                data = match.groupdict() # TODO: Convert to data encapsulation
 
                 # NEW: Exclude pets/mobs immediately
                 if not includePets and data['cls'].lower() == 'mob':
@@ -77,4 +77,19 @@ def parse_group_status(text_block: str, includePets: bool = False) -> List[Dict[
                 data['NewGroupMember'] = match.group('NewGroupMember').strip()
                 members.append(data)
 
+    return members
+
+def parse_leaveGroup(text: str) -> List[str]:
+    """Input of text to check.
+    
+    :param text: The text to check for a leaving group member.
+
+    :returns: The name of the member(s) who is/are leaving the group."""
+    pattern = re.compile(r"(?P<leavingMember>([A-Za-z ]+)) disbands from (your|the) group", re.IGNORECASE)
+    
+    members = []
+    leavingMembers = pattern.findall(text)
+    for member in leavingMembers:
+        members.append(member[1].strip())
+    
     return members

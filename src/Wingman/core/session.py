@@ -2,7 +2,7 @@ import time
 import re
 from Wingman.core.input_receiver import InputReceiver
 # Ensure parse_group_status is imported from your parser refactor
-from Wingman.core.parser import parse_xp_message, parse_group_status
+from Wingman.core.parser import parse_xp_message, parse_group_status, parse_leaveGroup
 
 
 class GameSession:
@@ -17,6 +17,8 @@ class GameSession:
 
         # New: Store the latest snapshot of group members
         self.latest_group_data = []
+        
+        self.shouldRefreshGroupDisplay: bool = False
 
     # --- NEW: Time Calculation Helper ---
     def get_active_duration(self):
@@ -88,6 +90,21 @@ class GameSession:
         """
         logs = []
 
+        def needToClearGroupData(line: str) -> bool:
+            if "group:" in line and re.search(r"\S+'s group:", line):
+                return True
+            
+            if "You disband from " in line:
+                return True
+
+            return False
+        
+        def removeLeavingMembers(leavingMembers: list[str]):
+            for leavingMember in leavingMembers:
+                for currentMember in self.get_latest_group_data():
+                    if currentMember['name'] == leavingMember or currentMember['NewGroupMember'] == leavingMember:
+                        self.latest_group_data.remove(currentMember)
+
         # Process everything currently in the stack
         while True:
             line = self.receiver.remove_from_top()
@@ -102,14 +119,19 @@ class GameSession:
             # if "group:" in line and re.search(r"^\S+'s group:", line):
 
             # NEW: Remove the '^' to allow timestamps before the name
-            if "group:" in line and re.search(r"\S+'s group:", line):
+            if needToClearGroupData(line):
                 self.latest_group_data.clear()
+                self.shouldRefreshGroupDisplay = True
 
             # Check for member rows in this line
             found_members = parse_group_status(line)
             if found_members:
                 # Add found members to our "dashboard" list
                 self.latest_group_data.extend(found_members)
+            
+            leavingMembers = parse_leaveGroup(line)
+            if leavingMembers:
+                removeLeavingMembers(leavingMembers)
 
             # --- Logic 2: XP Detection ---
             xp_gain = parse_xp_message(line)
