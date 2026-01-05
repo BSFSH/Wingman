@@ -3,7 +3,8 @@ import time
 import ctypes
 from tkinter import ttk
 from Wingman.core.session import GameSession
-from Wingman.core.parser import Group, Character
+from Wingman.core.group import Group
+from Wingman.core.character import Character
 
 class XPTrackerApp:
     def __init__(self, session: GameSession):

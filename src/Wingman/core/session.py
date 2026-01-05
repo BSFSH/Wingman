@@ -1,8 +1,8 @@
 import time
 import re
+from Wingman.core.parser import parse_xp_message, parse_group_status, parse_leaveGroup
 from Wingman.core.input_receiver import InputReceiver
-from Wingman.core.parser import parse_xp_message, parse_group_status, parse_leaveGroup, Group
-
+from Wingman.core.group import Group
 
 class GameSession:
     def __init__(self, receiver: InputReceiver):

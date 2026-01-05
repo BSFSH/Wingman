@@ -88,7 +88,3 @@ class TestApp():
         assert unfollowedGroupCount == 1
         assert groupCountAfterFirstFollower == 2
         assert groupCountAfterSecondFollower == 3
-
-
-if __name__ == "__main__":
-    TestApp().test_FollowedByTwoIdenticallyDisguisedCharacters_BothAddedToGroupForDisplay()
